@@ -1,0 +1,126 @@
+# Правила стилю REST API курсу «Розробка клієнт-серверних застосувань» (префікс kss-).
+# Запуск: npm run lint
+extends: ["spectral:oas"]
+functionsDir: "./functions"
+functions: [postCreatesResource, pagedCollections, problemDetails, clientErrors, designCoverage]
+
+rules:
+  # --- вбудовані правила, посилені до рівня error
+  operation-operationId: error
+  operation-tags: error
+  operation-success-response: error
+  oas3-valid-media-example: error
+  oas3-valid-schema-example: error
+  info-contact: off
+  operation-description: off
+
+  # --- сервер і шляхи
+  kss-server-versioned:
+    description: Адреса сервера містить версію API (/api/v1)
+    message: "Адреса сервера має закінчуватися на /api/v<номер>"
+    severity: error
+    given: "$.servers[*].url"
+    then:
+      function: pattern
+      functionOptions:
+        match: "/api/v[0-9]+$"
+
+  kss-path-kebab-case:
+    description: Сегменти шляху – малі літери через дефіс, параметри – {camelCase}
+    message: "Шлях {{property}}: сегменти – kebab-case, параметри – {camelCase}"
+    severity: error
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^(/([a-z0-9]+(-[a-z0-9]+)*|\\{[a-z][a-zA-Z0-9]*\\}))+$"
+
+  kss-path-no-verbs:
+    description: Шлях містить іменники (ресурси), а не дієслова; дію визначає метод HTTP
+    message: "Шлях {{property}} містить дієслово – дію має визначати метод HTTP"
+    severity: error
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "/(get|create|update|delete|remove|add|list|fetch|save|edit|new)([-/]|$)"
+
+  kss-path-param-descriptive:
+    description: Параметр шляху називається за ресурсом – {ticketId}, а не {id}
+    message: "Шлях {{property}}: використовуйте описову назву параметра, наприклад {ticketId}"
+    severity: error
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "\\{id\\}"
+
+  # --- операції
+  kss-operation-summary:
+    description: Кожна операція має короткий опис summary
+    message: "Додайте summary – короткий опис операції"
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete]"
+    then:
+      field: summary
+      function: truthy
+
+  kss-post-creates-resource:
+    description: POST, що створює ресурс, повертає 201 і Location
+    message: "{{error}}"
+    severity: error
+    given: "$.paths[*]"
+    then:
+      function: postCreatesResource
+
+  kss-delete-no-content:
+    description: Успішний DELETE повертає 204 No Content
+    message: "DELETE має повертати 204 No Content"
+    severity: error
+    given: "$.paths[*].delete.responses"
+    then:
+      field: "204"
+      function: truthy
+
+  kss-paged-collections:
+    description: Колекції повертаються сторінками з параметрами page і pageSize
+    message: "{{error}}"
+    severity: error
+    given: "$.paths[*].get"
+    then:
+      function: pagedCollections
+
+  kss-errors-problem-details:
+    description: Помилки – у форматі application/problem+json (RFC 9457)
+    message: "{{error}}"
+    severity: error
+    given: "$.paths[*][get,post,put,patch,delete].responses"
+    then:
+      function: problemDetails
+
+  kss-client-errors:
+    description: Операції описують помилки 4xx; захищені – 401
+    message: "{{error}}"
+    severity: error
+    given: "$"
+    then:
+      function: clientErrors
+
+  kss-design-coverage:
+    description: Мінімальний обсяг API практичної роботи № 4
+    message: "{{error}}"
+    severity: error
+    given: "$.paths"
+    then:
+      function: designCoverage
+
+  # --- схеми
+  kss-properties-camel-case:
+    description: Властивості JSON – camelCase
+    message: "Властивість {{property}} має бути в camelCase"
+    severity: error
+    given: "$.components.schemas..properties[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-zA-Z0-9]*$"
