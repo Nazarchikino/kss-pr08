@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { createValidationPipe } from './common/validation.js';
+import { setupSwagger } from './swagger.js';
 
 /**
  * Спільні налаштування застосунку. Викликається і в main.ts, і в e2e-тестах,
@@ -9,5 +10,6 @@ export function configureApp(app: INestApplication): INestApplication {
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(createValidationPipe());
   app.enableShutdownHooks();
+  setupSwagger(app);
   return app;
 }

@@ -1,7 +1,9 @@
 import { Controller, Get, Inject } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 import { APP_INFO, type AppInfo } from './app-info.js';
 import { Public } from './auth/public.decorator.js';
 
+@ApiExcludeController()
 @Controller('health')
 export class HealthController {
   constructor(@Inject(APP_INFO) private readonly info: AppInfo) {}

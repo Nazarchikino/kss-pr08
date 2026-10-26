@@ -42,8 +42,9 @@ export class TicketsService {
         `${t.title} ${t.description ?? ''}`.toLowerCase().includes(q),
       );
     }
-    const desc = query.sort.startsWith('-');
-    const key = query.sort.replace('-', '') as 'createdAt' | 'priority';
+    const sort = query.sort ?? '-createdAt';
+    const desc = sort.startsWith('-');
+    const key = sort.replace('-', '') as 'createdAt' | 'priority';
     items.sort((a, b) => {
       const diff =
         key === 'priority'
